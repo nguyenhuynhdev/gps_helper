@@ -21,8 +21,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
     private ProgressBar progress;
-    private FloatingActionButton btnMyLocation;
     private LocationHelper locationHelper;
+    private FloatingActionButton btnMyLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,14 +57,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         btnMyLocation.setVisibility(View.GONE);
         progress.setVisibility(View.VISIBLE);
-        locationHelper.setTimeOut(60000).requestLocation(MapsActivity.this);
+        locationHelper.setTimeOut(60000).requestLocationGoogle(MapsActivity.this);
 
         btnMyLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 btnMyLocation.setVisibility(View.GONE);
                 progress.setVisibility(View.VISIBLE);
-                locationHelper.requestLocation(MapsActivity.this);
+                locationHelper.requestLocationGoogle(MapsActivity.this);
             }
         });
     }
