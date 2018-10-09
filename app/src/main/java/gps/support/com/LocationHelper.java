@@ -30,6 +30,9 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.io.Serializable;
 
+/**
+ * Helper class to get current location
+ */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class LocationHelper extends LocationCallback implements LocationListener, Runnable {
 
@@ -37,29 +40,14 @@ public class LocationHelper extends LocationCallback implements LocationListener
     private static final int LOCATION_PERMISSION_GOOGLE = 1234;
 
     private Activity activity;
+    //Handler to request timeout
     private final Handler handler;
     private LocationCallBack mCallBack;
+    //Default max
     private long timeOut = Long.MAX_VALUE;
     private final LocationManager locationManager;
     private final FusedLocationProviderClient locationProviderClient;
 
-    @Override
-    public void onLocationResult(LocationResult locationResult) {
-        if (locationResult != null && locationResult.getLastLocation() != null) {
-            handler.removeCallbacks(this);
-            locationProviderClient.removeLocationUpdates(this);
-            mCallBack.onResponse(new Task(locationResult.getLastLocation(), null, true));
-        }
-    }
-
-    @Override
-    public void onLocationAvailability(LocationAvailability locationAvailability) {
-        if (!locationAvailability.isLocationAvailable()) {
-            handler.removeCallbacks(this);
-            locationProviderClient.removeLocationUpdates(this);
-            mCallBack.onResponse(new Task(null, new Throwable("Location is not available"), false));
-        }
-    }
 
     public LocationHelper(Activity activity) {
         this.activity = activity;
@@ -68,6 +56,9 @@ public class LocationHelper extends LocationCallback implements LocationListener
         locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
     }
 
+    /**
+     * Init in [{@link Activity}.onRequestPermissionsResult]
+     */
     public void onRequestPermissionsResult(int requestCode, @NonNull int[] grantResults) {
         switch (requestCode) {
             case LOCATION_PERMISSION: {
@@ -87,6 +78,9 @@ public class LocationHelper extends LocationCallback implements LocationListener
                 new Throwable("Permission denied"), false));
     }
 
+    /**
+     * Init in [{@link Activity}.onActivityResult]
+     */
     public void onActivityResult(int requestCode, int resultCode) {
         switch (requestCode) {
             case LOCATION_PERMISSION: {
@@ -107,6 +101,11 @@ public class LocationHelper extends LocationCallback implements LocationListener
 
     }
 
+    /**
+     * Get current location using [{@link FusedLocationProviderClient}]
+     *
+     * @param locationCallBack class implement[{@link LocationCallBack}]
+     */
     public void requestLocationGoogle(LocationCallBack locationCallBack) {
         try {
             mCallBack = locationCallBack;
@@ -129,6 +128,7 @@ public class LocationHelper extends LocationCallback implements LocationListener
                     if (e instanceof ResolvableApiException) {
                         handler.removeCallbacks(LocationHelper.this);
                         try {
+                            //Show dialog to select LocationRequest.PRIORITY_HIGH_ACCURACY
                             ((ResolvableApiException) e)
                                     .startResolutionForResult(activity, LOCATION_PERMISSION_GOOGLE);
                         } catch (IntentSender.SendIntentException e1) {
@@ -162,6 +162,11 @@ public class LocationHelper extends LocationCallback implements LocationListener
         }
     }
 
+    /**
+     * Get current location using [{@link LocationManager}]
+     *
+     * @param locationCallBack class implement[{@link LocationCallBack}]
+     */
     public void requestLocation(LocationCallBack locationCallBack) {
         try {
             mCallBack = locationCallBack;
@@ -184,6 +189,7 @@ public class LocationHelper extends LocationCallback implements LocationListener
                     if (e instanceof ResolvableApiException) {
                         handler.removeCallbacks(LocationHelper.this);
                         try {
+                            //Show dialog to select LocationRequest.PRIORITY_HIGH_ACCURACY
                             ((ResolvableApiException) e)
                                     .startResolutionForResult(activity, LOCATION_PERMISSION);
                         } catch (IntentSender.SendIntentException e1) {
@@ -219,11 +225,49 @@ public class LocationHelper extends LocationCallback implements LocationListener
         }
     }
 
+    /**
+     * Set time out of request
+     * @param timeOut millis
+     * @return current LocationHelper
+     */
     public LocationHelper setTimeOut(long timeOut) {
         this.timeOut = timeOut;
         return this;
     }
 
+    /**
+     * extends [{@link LocationCallback}]
+     *
+     * @param locationResult Locations result
+     */
+    @Override
+    public void onLocationResult(LocationResult locationResult) {
+        if (locationResult != null && locationResult.getLastLocation() != null) {
+            handler.removeCallbacks(this);
+            locationProviderClient.removeLocationUpdates(this);
+            mCallBack.onResponse(new Task(locationResult.getLastLocation(), null, true));
+        }
+    }
+
+    /**
+     * extends [{@link LocationCallback}]
+     *
+     * @param locationAvailability check isLocation Available
+     */
+    @Override
+    public void onLocationAvailability(LocationAvailability locationAvailability) {
+        if (!locationAvailability.isLocationAvailable()) {
+            handler.removeCallbacks(this);
+            locationProviderClient.removeLocationUpdates(this);
+            mCallBack.onResponse(new Task(null, new Throwable("Location is not available"), false));
+        }
+    }
+
+    /**
+     * implement [{@link LocationListener}]
+     *
+     * @param location Location result
+     */
     @Override
     public void onLocationChanged(Location location) {
         handler.removeCallbacks(this);
@@ -231,11 +275,17 @@ public class LocationHelper extends LocationCallback implements LocationListener
         mCallBack.onResponse(new Task(location, null, true));
     }
 
+    /**
+     * implement [{@link LocationListener}]
+     */
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
         //Empty
     }
 
+    /**
+     * implement [{@link LocationListener}]
+     */
     @SuppressLint("MissingPermission")
     @Override
     public void onProviderEnabled(String provider) {
@@ -247,6 +297,9 @@ public class LocationHelper extends LocationCallback implements LocationListener
                 1, 0, LocationHelper.this);
     }
 
+    /**
+     * implement [{@link LocationListener}]
+     */
     @Override
     public void onProviderDisabled(String provider) {
         locationManager.removeUpdates(this);
@@ -254,7 +307,10 @@ public class LocationHelper extends LocationCallback implements LocationListener
                 "Gps was disable while loading"), false));
     }
 
-    //Time out runnable
+    /**
+     * implement [{@link Runnable}]
+     * Control the time out of current request
+     */
     @Override
     public void run() {
         locationManager.removeUpdates(this);
