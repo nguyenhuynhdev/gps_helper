@@ -26,48 +26,46 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.io.Serializable;
 
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class LocationHelper implements LocationListener, Runnable {
 
     private static final int LOCATION_PERMISSION = 4321;
 
+    private Activity activity;
     private final Handler handler;
-    private long timeOut = Long.MAX_VALUE;
-    private static LocationHelper locationHelper;
-    private final LocationManager locationManager;
     private LocationCallBack mCallBack;
+    private long timeOut = Long.MAX_VALUE;
+    private final LocationManager locationManager;
 
-    public static LocationHelper getInstance(Context context) {
-        return locationHelper != null ? locationHelper :
-                (locationHelper = new LocationHelper(context));
-    }
-
-    private LocationHelper(Context context) {
+    public LocationHelper(Activity activity) {
+        this.activity = activity;
         handler = new Handler(Looper.getMainLooper());
-        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
     }
 
-    public void onRequestPermissionsResult(int requestCode, @NonNull int[] grantResults, Activity activity) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull int[] grantResults) {
         if (requestCode == LOCATION_PERMISSION) {
             if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                requestLocation(activity, mCallBack);
+                requestLocation(mCallBack);
                 return;
             }
         }
-        mCallBack.onResponse(new Task(null, new Throwable("Permission denied"), false));
+        mCallBack.onResponse(new Task(null,
+                new Throwable("Permission denied"), false));
     }
 
-    public void onActivityResult(int requestCode, int resultCode, Activity activity) {
+    public void onActivityResult(int requestCode, int resultCode) {
         if (requestCode == LOCATION_PERMISSION) {
             if (resultCode == -1) {
-                requestLocation(activity, mCallBack);
+                requestLocation(mCallBack);
             } else {
-                mCallBack.onResponse(new Task(null, new Throwable("Permission denied"), false));
+                mCallBack.onResponse(new Task(null,
+                        new Throwable("Permission denied"), false));
             }
-
         }
     }
 
-    public synchronized void requestLocation(final Activity activity, LocationCallBack locationCallBack) {
+    public void requestLocation(LocationCallBack locationCallBack) {
         try {
             mCallBack = locationCallBack;
             handler.removeCallbacks(this);
@@ -89,7 +87,8 @@ public class LocationHelper implements LocationListener, Runnable {
                     if (e instanceof ResolvableApiException) {
                         handler.removeCallbacks(LocationHelper.this);
                         try {
-                            ((ResolvableApiException) e).startResolutionForResult(activity, LOCATION_PERMISSION);
+                            ((ResolvableApiException) e)
+                                    .startResolutionForResult(activity, LOCATION_PERMISSION);
                         } catch (IntentSender.SendIntentException e1) {
                             mCallBack.onResponse(new Task(null, e1, false));
                         }
@@ -99,12 +98,17 @@ public class LocationHelper implements LocationListener, Runnable {
             task.addOnSuccessListener(new OnSuccessListener<LocationSettingsResponse>() {
                 @Override
                 public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-                    if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                            activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    if (ActivityCompat.checkSelfPermission(activity,
+                            Manifest.permission.ACCESS_FINE_LOCATION) !=
+                            PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                            activity,
+                            Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                            PackageManager.PERMISSION_GRANTED) {
                         String[] LOCATION_PERMS = {
                                 Manifest.permission.ACCESS_FINE_LOCATION
                         };
-                        ActivityCompat.requestPermissions(activity, LOCATION_PERMS, LOCATION_PERMISSION);
+                        ActivityCompat.requestPermissions(activity,
+                                LOCATION_PERMS, LOCATION_PERMISSION);
                         return;
                     }
                     locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,

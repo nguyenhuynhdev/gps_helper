@@ -22,10 +22,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private ProgressBar progress;
     private FloatingActionButton btnMyLocation;
+    private LocationHelper locationHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        locationHelper = new LocationHelper(this);
         setContentView(R.layout.activity_maps);
         progress = findViewById(R.id.progress);
         btnMyLocation = findViewById(R.id.btn_my_location);
@@ -37,12 +39,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        LocationHelper.getInstance(this).onRequestPermissionsResult(requestCode, grantResults, this);
+        locationHelper.onRequestPermissionsResult(requestCode, grantResults);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        LocationHelper.getInstance(this).onActivityResult(requestCode, resultCode, this);
+        locationHelper.onActivityResult(requestCode, resultCode);
         super.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -55,15 +57,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         btnMyLocation.setVisibility(View.GONE);
         progress.setVisibility(View.VISIBLE);
-        LocationHelper.getInstance(MapsActivity.this).setTimeOut(60000).requestLocation(
-                MapsActivity.this, MapsActivity.this);
+        locationHelper.setTimeOut(60000).requestLocation(MapsActivity.this);
+
         btnMyLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 btnMyLocation.setVisibility(View.GONE);
                 progress.setVisibility(View.VISIBLE);
-                LocationHelper.getInstance(MapsActivity.this).requestLocation(
-                        MapsActivity.this, MapsActivity.this);
+                locationHelper.requestLocation(MapsActivity.this);
             }
         });
     }
