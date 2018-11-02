@@ -151,6 +151,7 @@ public class LocationHelper extends LocationCallback implements LocationListener
                         };
                         ActivityCompat.requestPermissions(activity,
                                 LOCATION_PERMS, LOCATION_PERMISSION_GOOGLE);
+                        handler.removeCallbacks(LocationHelper.this);
                         return;
                     }
                     locationProviderClient.requestLocationUpdates(locationRequest,
@@ -212,6 +213,7 @@ public class LocationHelper extends LocationCallback implements LocationListener
                         };
                         ActivityCompat.requestPermissions(activity,
                                 LOCATION_PERMS, LOCATION_PERMISSION);
+                        handler.removeCallbacks(LocationHelper.this);
                         return;
                     }
                     locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
